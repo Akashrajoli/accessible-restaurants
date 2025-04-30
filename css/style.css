@@ -1,0 +1,102 @@
+:root {
+    --primary: #0d6efd;
+    --secondary: #6c757d;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #212529;
+  }
+  
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--dark);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  
+  /* Rating styles */
+  .rating-container {
+    font-size: 1.5rem;
+  }
+  
+  .rating-input {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .rating-star {
+    cursor: pointer;
+    color: #dee2e6;
+    transition: transform 0.2s;
+  }
+  
+  .rating-star:hover {
+    transform: scale(1.1);
+  }
+  
+  .rating-star.selected i {
+    color: var(--warning);
+  }
+  
+  .rating-star:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+  }
+  
+  /* Accessibility improvements */
+  a:focus, 
+  button:focus, 
+  input:focus, 
+  textarea:focus, 
+  select:focus,
+  [role="radio"]:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+  }
+  
+  /* Voice recorder */
+  .voice-recorder {
+    background-color: var(--light);
+  }
+  
+  /* High contrast mode */
+  @media (prefers-contrast: more) {
+    body {
+      color: #000;
+      background-color: #fff;
+    }
+    
+    .btn-primary {
+      background-color: #000;
+      border-color: #000;
+      color: #fff;
+    }
+    
+    .rating-star.selected i {
+      color: #000;
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .rating-input {
+      font-size: 1.5rem;
+    }
+  }
+  
+  /* Skip to content link */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary);
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.3s;
+  }
+  
+  .skip-link:focus {
+    top: 0;
+  }

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Details</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <header class="bg-primary text-white py-3">
+    <div class="container">
+      <h1 id="restaurant-name" class="text-center">Restaurant Name</h1>
+    </div>
+  </header>
+
+  <main class="container my-4">
+    <img id="restaurant-image" src="" alt="" class="img-fluid rounded mb-4">
+    
+    <div id="restaurant-details">
+      <!-- Details will be filled by JavaScript -->
+    </div>
+    
+    <button class="btn btn-primary mt-4" id="write-review-btn">
+      Write a Review
+    </button>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const restaurant = JSON.parse(localStorage.getItem('currentRestaurant'));
+      
+      document.getElementById('restaurant-name').textContent = restaurant.name;
+      document.getElementById('restaurant-image').src = restaurant.image;
+      document.getElementById('restaurant-image').alt = `Image of ${restaurant.name}`;
+      
+      const detailsContainer = document.getElementById('restaurant-details');
+      
+      // Add rating
+      const rating = createRatingDisplay(restaurant.rating);
+      rating.setAttribute('aria-label', `Average rating: ${restaurant.rating} stars`);
+      detailsContainer.appendChild(rating);
+      
+      // Add features
+      const featuresTitle = document.createElement('h2');
+      featuresTitle.className = 'mt-4';
+      featuresTitle.textContent = 'Accessibility Features';
+      detailsContainer.appendChild(featuresTitle);
+      
+      const featuresList = document.createElement('div');
+      restaurant.features.forEach(feature => {
+        const featureItem = document.createElement('div');
+        featureItem.className = 'd-flex align-items-center mb-2';
+        featureItem.innerHTML = `
+          <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+          <span>${feature}</span>
+        `;
+        featuresList.appendChild(featureItem);
+      });
+      detailsContainer.appendChild(featuresList);
+      
+      // Add reviews section
+      const reviewsTitle = document.createElement('h2');
+      reviewsTitle.className = 'mt-4';
+      reviewsTitle.textContent = 'Customer Reviews';
+      detailsContainer.appendChild(reviewsTitle);
+      
+      const reviews = [
+        {
+          id: 1,
+          rating: 5,
+          text: "Excellent accessibility features. As a wheelchair user, I had no issues navigating the space.",
+          user: "Alex"
+        }
+      ];
+      
+      reviews.forEach(review => {
+        const reviewCard = document.createElement('div');
+        reviewCard.className = 'card mb-3';
+        
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+        
+        const reviewRating = createRatingDisplay(review.rating);
+        cardBody.appendChild(reviewRating);
+        
+        const reviewText = document.createElement('p');
+        reviewText.className = 'card-text fst-italic my-3';
+        reviewText.textContent = `"${review.text}"`;
+        cardBody.appendChild(reviewText);
+        
+        const reviewUser = document.createElement('p');
+        reviewUser.className = 'card-text text-end fw-bold';
+        reviewUser.textContent = `- ${review.user}`;
+        cardBody.appendChild(reviewUser);
+        
+        const playButton = document.createElement('button');
+        playButton.className = 'btn btn-outline-primary';
+        playButton.innerHTML = '<i class="bi bi-volume-up me-2" aria-hidden="true"></i>Play Audio';
+        playButton.setAttribute('aria-label', 'Listen to this review');
+        playButton.addEventListener('click', () => {
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(review.text);
+            speechSynthesis.speak(utterance);
+          }
+        });
+        cardBody.appendChild(playButton);
+        
+        reviewCard.appendChild(cardBody);
+        detailsContainer.appendChild(reviewCard);
+      });
+      
+      // Write review button
+      document.getElementById('write-review-btn').addEventListener('click', () => {
+        window.location.href = 'review.html';
+      });
+    });
+  </script>
+</body>
+</html>

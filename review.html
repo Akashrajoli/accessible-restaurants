@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write a Review</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <header class="bg-primary text-white py-3">
+    <div class="container">
+      <h1 class="text-center">Write a Review</h1>
+    </div>
+  </header>
+
+  <main class="container my-4">
+    <form id="review-form">
+      <h2 class="text-center mb-4">How was your experience?</h2>
+      
+      <div class="mb-4">
+        <label for="overall-rating" class="form-label">Overall Rating</label>
+        <div class="rating-input" id="overall-rating" role="radiogroup" aria-labelledby="overall-rating-label">
+          <span id="overall-rating-label" class="visually-hidden">Rate your overall experience from 1 to 5 stars</span>
+          <!-- Rating stars will be added by JavaScript -->
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label for="accessibility-rating" class="form-label">Accessibility Rating</label>
+        <div class="rating-input" id="accessibility-rating" role="radiogroup" aria-labelledby="accessibility-rating-label">
+          <span id="accessibility-rating-label" class="visually-hidden">Rate the accessibility features from 1 to 5 stars</span>
+          <!-- Rating stars will be added by JavaScript -->
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label for="review-text" class="form-label">Your Review</label>
+        <textarea class="form-control" id="review-text" rows="5" aria-label="Write your review"></textarea>
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label">Voice Review (Optional)</label>
+        <div class="voice-recorder card p-3">
+          <button type="button" class="btn btn-outline-primary mb-2" id="start-recording">
+            <i class="bi bi-mic me-2" aria-hidden="true"></i>Start Recording
+          </button>
+          <button type="button" class="btn btn-danger mb-2 d-none" id="stop-recording">
+            <i class="bi bi-stop-fill me-2" aria-hidden="true"></i>Stop Recording
+          </button>
+          <div id="recording-timer" class="text-center d-none">Recording: 0:00</div>
+        </div>
+      </div>
+      
+      <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" id="anonymous-check">
+        <label class="form-check-label" for="anonymous-check">
+          Submit anonymously
+        </label>
+      </div>
+      
+      <button type="submit" class="btn btn-primary w-100" id="submit-review" disabled>
+        Submit Review
+      </button>
+    </form>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize rating inputs
+      initRatingInput('overall-rating');
+      initRatingInput('accessibility-rating');
+      
+      // Voice recorder functionality
+      const startBtn = document.getElementById('start-recording');
+      const stopBtn = document.getElementById('stop-recording');
+      const timer = document.getElementById('recording-timer');
+      
+      let mediaRecorder;
+      let audioChunks = [];
+      let recordingInterval;
+      let seconds = 0;
+      
+      startBtn.addEventListener('click', async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          
+          mediaRecorder.ondataavailable = (e) => {
+            audioChunks.push(e.data);
+          };
+          
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            localStorage.setItem('audioReview', audioUrl);
+            audioChunks = [];
+          };
+          
+          mediaRecorder.start();
+          startBtn.classList.add('d-none');
+          stopBtn.classList.remove('d-none');
+          timer.classList.remove('d-none');
+          
+          // Start timer
+          seconds = 0;
+          recordingInterval = setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timer.textContent = `Recording: ${mins}:${secs.toString().padStart(2, '0')}`;
+            timer.setAttribute('aria-live', 'polite');
+          }, 1000);
+        } catch (err) {
+          console.error('Error accessing microphone:', err);
+          alert('Could not access microphone. Please check permissions.');
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+          clearInterval(recordingInterval);
+          stopBtn.classList.add('d-none');
+          startBtn.classList.remove('d-none');
+        }
+      });
+      
+      // Form submission
+      const form = document.getElementById('review-form');
+      const submitBtn = document.getElementById('submit-review');
+      
+      form.addEventListener('change', () => {
+        const overallRating = document.querySelector('#overall-rating .selected')?.getAttribute('data-value');
+        const accessibilityRating = document.querySelector('#accessibility-rating .selected')?.getAttribute('data-value');
+        
+        submitBtn.disabled = !overallRating || !accessibilityRating;
+      });
+      
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const review = {
+          restaurantId: JSON.parse(localStorage.getItem('currentRestaurant')).id,
+          overallRating: document.querySelector('#overall-rating .selected')?.getAttribute('data-value'),
+          accessibilityRating: document.querySelector('#accessibility-rating .selected')?.getAttribute('data-value'),
+          reviewText: document.getElementById('review-text').value,
+          audioReview: localStorage.getItem('audioReview'),
+          isAnonymous: document.getElementById('anonymous-check').checked
+        };
+        
+        console.log('Review submitted:', review);
+        alert('Review submitted successfully!');
+        window.location.href = 'restaurant.html';
+      });
+    });
+    
+    function initRatingInput(containerId) {
+      const container = document.getElementById(containerId);
+      const labelId = container.getAttribute('aria-labelledby');
+      const labelText = document.getElementById(labelId).textContent;
+      
+      // Clear existing stars
+      container.innerHTML = '';
+      
+      for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('button');
+        star.className = 'rating-star btn p-0 bg-transparent border-0';
+        star.setAttribute('data-value', i);
+        star.innerHTML = '<i class="bi bi-star-fill fs-3"></i>';
+        star.setAttribute('role', 'radio');
+        star.setAttribute('aria-label', `${i} star${i > 1 ? 's' : ''}`);
+        star.setAttribute('aria-checked', 'false');
+        
+        star.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Remove selected class from all stars
+          container.querySelectorAll('.rating-star').forEach(s => {
+            s.classList.remove('selected');
+            s.setAttribute('aria-checked', 'false');
+            s.innerHTML = '<i class="bi bi-star-fill fs-3"></i>';
+          });
+          
+          // Add selected class to clicked star and previous stars
+          for (let j = 1; j <= i; j++) {
+            const starToSelect = container.querySelector(`.rating-star[data-value="${j}"]`);
+            starToSelect.classList.add('selected');
+            starToSelect.setAttribute('aria-checked', 'true');
+            starToSelect.innerHTML = '<i class="bi bi-star-fill fs-3 text-warning"></i>';
+          }
+          
+          // Trigger form change event
+          container.dispatchEvent(new Event('change'));
+        });
+        
+        star.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            star.click();
+          }
+        });
+        
+        container.appendChild(star);
+      }
+      
+      // Add keyboard navigation
+      container.addEventListener('keydown', (e) => {
+        const stars = Array.from(container.querySelectorAll('.rating-star'));
+        const currentIndex = stars.findIndex(star => star === document.activeElement);
+        
+        if (e.key === 'ArrowRight' && currentIndex < stars.length - 1) {
+          e.preventDefault();
+          stars[currentIndex + 1].focus();
+        } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+          e.preventDefault();
+          stars[currentIndex - 1].focus();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
